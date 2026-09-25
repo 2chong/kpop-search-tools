@@ -141,7 +141,7 @@ fn check_update_impl(app: &AppHandle, timeout_ms: u64) -> Result<CheckResult, St
     if !resp.status().is_success() {
         return skip(format!("manifest HTTP {}", resp.status()));
     }
-    let manifest: Manifest = match resp.json() {
+    let manifest: Manifest = match resp.text().map_err(|e| e.to_string()).and_then(|t| serde_json::from_str(&t).map_err(|e| e.to_string())) {
         Ok(m) => m,
         Err(e) => return skip(format!("manifest 형식 오류: {e}")),
     };

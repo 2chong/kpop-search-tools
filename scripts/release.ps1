@@ -4,8 +4,11 @@ $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) { $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path" }
 
-npm run tauri build
-if ($LASTEXITCODE -ne 0) { throw 'tauri build failed' }
+$ErrorActionPreference = 'Continue'   # npm/cargo 는 진행 정보를 stderr 로 쓰므로 종료 코드로만 판단
+cmd /c "npm run tauri build"
+$code = $LASTEXITCODE
+$ErrorActionPreference = 'Stop'
+if ($code -ne 0) { throw 'tauri build failed' }
 
 $conf = Get-Content (Join-Path $root 'src-tauri\tauri.conf.json') -Raw | ConvertFrom-Json
 $ver = $conf.version

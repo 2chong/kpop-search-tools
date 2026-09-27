@@ -183,6 +183,14 @@ fn check_update_impl(app: &AppHandle, timeout_ms: u64) -> Result<CheckResult, St
     Ok(CheckResult::Updated { version: head.version, count: head.count })
 }
 
+/// 테스트용 동기 호출: 결과를 JSON 문자열로 돌려준다.
+pub fn check_update_blocking(app: &AppHandle, timeout_ms: u64) -> String {
+    match check_update_impl(app, timeout_ms) {
+        Ok(r) => serde_json::to_string(&r).unwrap_or_default(),
+        Err(e) => format!("{{\"status\":\"error\",\"reason\":{}}}", serde_json::to_string(&e).unwrap_or_default()),
+    }
+}
+
 #[tauri::command]
 pub async fn catalog_check_update(app: AppHandle, timeout_ms: Option<u64>) -> Result<CheckResult, String> {
     let timeout = timeout_ms.unwrap_or(5000).clamp(1000, 60_000);

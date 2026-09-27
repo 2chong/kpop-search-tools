@@ -69,9 +69,13 @@ async function loadAndRender(): Promise<void> {
   refresh();
 }
 
-async function runUpdateCheck(manual: boolean) {
+function updateLabel() {
+  banner.updateButton.textContent = `목록 ${state.catalog?.version ?? '?'} · 업데이트 확인`;
+}
+
+async function runUpdateCheck(manual: boolean, force = false) {
   const last = Number(localStorage.getItem(LAST_CHECK_KEY) || 0);
-  if (!manual && Date.now() - last < CHECK_INTERVAL_MS) return;
+  if (!manual && !force && Date.now() - last < CHECK_INTERVAL_MS) return;
   banner.updateButton.disabled = true; banner.updateButton.textContent = '확인 중…';
   try {
     const res = await checkUpdate(manual ? 10000 : 5000);
@@ -82,7 +86,7 @@ async function runUpdateCheck(manual: boolean) {
   } catch (err) {
     if (manual) showToast(`업데이트 확인 실패: ${String(err)}`);
   } finally {
-    banner.updateButton.disabled = false; banner.updateButton.textContent = '목록 업데이트 확인';
+    banner.updateButton.disabled = false; updateLabel();
   }
 }
 banner.updateButton.addEventListener('click', () => void runUpdateCheck(true));
@@ -93,7 +97,9 @@ banner.updateButton.addEventListener('click', () => void runUpdateCheck(true));
     controls.focusSearch();
     const ver = await appVersion();
     banner.updateButton.title = `앱 ${ver} · 목록 ${state.catalog?.version ?? '?'} (${state.catalogSource === 'downloaded' ? '내려받음' : '내장'})`;
-    void runUpdateCheck(false);
+    updateLabel();
+    void runUpdateCheck(false, true);                                   // 시작할 때는 항상 한 번 확인(조용히)
+    window.setInterval(() => void runUpdateCheck(false), CHECK_INTERVAL_MS); // 켜 둔 채로도 6시간마다
   } catch (err) {
     pill.textContent = '목록을 열 수 없습니다';
     statusTextEl.textContent = String(err);

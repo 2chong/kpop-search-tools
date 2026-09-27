@@ -20,7 +20,7 @@ function decoration(): string {
 export function renderBanner(root: HTMLElement): { setCount(n: number): void; updateButton: HTMLButtonElement } {
   root.className = 'banner';
   root.innerHTML = `${decoration()}<img class="title" src="${titleImage}" alt="한국 대중 음악 Search Tools" draggable="false">
-    <div class="chip" id="count-chip">-</div><button class="update" id="update-btn" type="button" title="온라인 목록 업데이트 확인">목록 업데이트 확인</button>`;
+    <div class="chip" id="count-chip">-</div><button class="update" id="update-btn" type="button" title="온라인 목록 업데이트 확인">업데이트 확인</button>`;
   const chip = root.querySelector<HTMLElement>('#count-chip')!;
   return { setCount: (n) => { chip.textContent = `${num(n)}곡`; }, updateButton: root.querySelector<HTMLButtonElement>('#update-btn')! };
 }

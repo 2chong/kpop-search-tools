@@ -10,6 +10,8 @@ $ErrorActionPreference = 'Continue'   # git/gh 는 진행 메시지를 stderr �
 function Check($what) { if ($LASTEXITCODE -ne 0) { throw "$what failed ($LASTEXITCODE)" } }
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { $env:Path = "$env:ProgramFiles\GitHub CLI;$env:Path" }
+if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { throw 'gh(GitHub CLI) 를 찾을 수 없습니다. winget install GitHub.cli 후 다시 실행하세요.' }
 
 if (-not $Repo) {
   $origin = git remote get-url origin

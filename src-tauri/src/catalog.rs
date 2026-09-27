@@ -12,7 +12,7 @@ use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager};
 
 /// 목록 manifest 주소. 저장소를 만든 뒤 사용자 이름을 채운다 (tools/publish_catalog.ps1 도 같은 값을 쓴다).
-pub const MANIFEST_URL: &str = "https://raw.githubusercontent.com/REPLACE_ME/kpop-search-tools/main/catalog/manifest.json";
+pub const MANIFEST_URL: &str = "https://raw.githubusercontent.com/2chong/kpop-search-tools/main/catalog/manifest.json";
 const SCHEMA: u64 = 1;
 
 #[derive(Serialize)]

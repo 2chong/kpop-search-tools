@@ -74,7 +74,7 @@ def main():
     ap.add_argument('--db', default=str(DEFAULT_DB))
     ap.add_argument('--out', default=str(DEFAULT_OUT))
     ap.add_argument('--version')
-    ap.add_argument('--repo', default='REPLACE_ME/kpop-search-tools', help='GitHub user/repo (manifest url)')
+    ap.add_argument('--repo', default='2chong/kpop-search-tools', help='GitHub user/repo (manifest url)')
     ap.add_argument('--install', action='store_true', help='src-tauri/resources/catalog.json.gz 에도 복사')
     a = ap.parse_args()
 

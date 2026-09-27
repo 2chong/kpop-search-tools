@@ -1,14 +1,16 @@
 // 검색·정렬. 기존 C# Database.Search / SearchInitials / PrioritizeExactInitials / ApplyLetterSort (SongSearch.cs 55-110, 341-365행) 이식.
 import type { Catalog, Song } from './catalog';
-import { expandCompoundJamo, isInitialQuery } from './hangul';
+import { artistKeyOf, expandCompoundJamo, isInitialQuery } from './hangul';
 import { clean } from './titleRules';
 
 export type Mode = 'contains' | 'starts' | 'ends';
 export type LetterSort = 'countFirst' | 'lengthFirst';
 export type ArtistSort = 'asc' | 'desc' | null;
+export type Target = 'title' | 'artist';
 
 export interface SearchOptions {
   mode: Mode;
+  target?: Target;           // 제목(기본) 또는 가수 검색. 가수는 항상 '포함' 으로 찾는다
   consonantOnly?: boolean;   // "자음 포함 제목" 보기 (보관 목록의 자음 제목 포함)
   threeOnly?: boolean;       // 3글자만
   letter?: string;           // 선택 글자('' 이면 없음)
@@ -19,6 +21,7 @@ export interface SearchOptions {
 export interface SearchResult {
   songs: Song[];
   initialQuery: boolean;     // 초성 검색이었는가
+  target: Target;
   query: string;             // 정리된 검색어
 }
 
@@ -35,11 +38,15 @@ function matches(key: string, q: string, mode: Mode): boolean {
 }
 
 export function search(catalog: Catalog, rawQuery: string, opts: SearchOptions): SearchResult {
-  const q = clean(expandCompoundJamo(rawQuery.trim())).toLowerCase();
+  const target: Target = opts.target ?? 'title';
+  const expanded = expandCompoundJamo(rawQuery.trim());
+  const q = target === 'artist' ? artistKeyOf(expanded) : clean(expanded).toLowerCase();
   const initial = isInitialQuery(q);
   const base = opts.consonantOnly ? catalog.songs.filter((s) => s.consonant) : catalog.songs.filter((s) => !s.pending);
-  let songs = base.filter((s) => matches(initial ? s.initials : s.lower, q, opts.mode));
-  if (initial) {
+  let songs = target === 'artist'
+    ? base.filter((s) => matches(initial ? s.artistInitials : s.artistKey, q, 'contains'))
+    : base.filter((s) => matches(initial ? s.initials : s.lower, q, opts.mode));
+  if (initial && target === 'title') {
     // 초성이 정확히 일치하는 제목을 앞으로 (각 무리 안에서는 기본 순서 유지)
     const exact = songs.filter((s) => s.initials === q);
     const partial = songs.filter((s) => s.initials !== q);
@@ -68,5 +75,5 @@ export function search(catalog: Catalog, rawQuery: string, opts: SearchOptions):
       return dir * a.artist.localeCompare(b.artist, 'ko');
     });
   }
-  return { songs, initialQuery: initial, query: q };
+  return { songs, initialQuery: initial, query: q, target };
 }

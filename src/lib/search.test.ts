@@ -109,6 +109,19 @@ describe('search', () => {
   it('3글자만', () => {
     for (const s of search(catalog, '', { mode: 'contains', threeOnly: true }).songs) expect(s.chars).toBe(3);
   });
+  it('가수 검색: 이름 일부·괄호 안 표기·초성, 항상 포함 방식', () => {
+    const byArtist = (q: string, mode: Mode = 'starts') => search(catalog, q, { mode, target: 'artist' }).songs;
+    const zb1 = byArtist('제로베이스원');
+    expect(zb1.length).toBeGreaterThan(20);
+    for (const s of zb1) expect(s.artist).toContain('제로베이스원');
+    expect(zb1.map((s) => s.title)).toContain('인블룸');
+    expect(byArtist('zerobaseone').length).toBe(zb1.length);
+    expect(byArtist('ZERO BASE ONE').length).toBe(zb1.length);
+    const taeyong = byArtist('ㅌㅇ');
+    expect(taeyong.some((s) => s.artist.includes('태용'))).toBe(true);
+    expect(byArtist('태용', 'ends').length).toBe(byArtist('태용', 'contains').length);
+    expect(byArtist('').length).toBe(catalog.count);
+  });
   it('가수 정렬: 가나다순/역순, 가수 없는 곡은 맨 뒤', () => {
     const asc = search(catalog, '사랑', { mode: 'contains', artistSort: 'asc' }).songs;
     const named = asc.filter((s) => s.artist);

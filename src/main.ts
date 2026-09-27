@@ -6,7 +6,8 @@ import { search } from './lib/search';
 import { state } from './state';
 import { renderBanner } from './ui/banner';
 import { renderControls } from './ui/controls';
-import { renderGrid } from './ui/grid';
+import { renderGrid, type ViewSnapshot } from './ui/grid';
+import { ICON_CHECK, ICON_COPY } from './ui/icons';
 
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const LAST_CHECK_KEY = 'catalog.lastCheck';
@@ -15,11 +16,15 @@ const app = document.getElementById('app')!;
 const bannerEl = document.createElement('header');
 const body = document.createElement('div'); body.className = 'body';
 const cardEl = document.createElement('section');
+const resultsEl = document.createElement('section'); resultsEl.className = 'results';
 const statusEl = document.createElement('div'); statusEl.className = 'status';
-statusEl.innerHTML = '<span class="pill" id="count-pill">불러오는 중</span><span class="text" id="status-text"></span>';
+statusEl.innerHTML = `<span class="pill" id="count-pill">불러오는 중</span><span class="text" id="status-text"></span><span class="hint">${ICON_COPY}<span>더블클릭으로 제목 복사</span></span>`;
 const gridEl = document.createElement('div');
 const toast = document.createElement('div'); toast.className = 'toast';
-body.append(cardEl, statusEl, gridEl);
+toast.innerHTML = `<span class="ico">${ICON_CHECK}</span><span class="msg"></span>`;
+const toastMsg = toast.querySelector<HTMLElement>('.msg')!;
+resultsEl.append(statusEl, gridEl);
+body.append(cardEl, resultsEl);
 app.append(bannerEl, body, toast);
 
 const banner = renderBanner(bannerEl);
@@ -29,16 +34,26 @@ let statusOverride = '';
 let toastTimer = 0;
 
 function showToast(text: string) {
-  toast.textContent = text; toast.classList.add('show');
+  toastMsg.textContent = text; toast.classList.add('show');
   window.clearTimeout(toastTimer); toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2600);
 }
 
+// 검색을 시작하기 직전에 보던 자리를 기억해 두고, 검색어를 모두 지우면(같은 보기 조건이면) 그 자리로 돌아간다.
+let browse: (ViewSnapshot & { key: string }) | null = null;
+let lastQuery = '';
+const viewKey = () => [state.mode, state.target, state.consonantOnly, state.threeOnly, state.letter, state.letterSort].join('|');
+
 function refresh() {
   if (!state.catalog) return;
-  const r = search(state.catalog, state.query, { mode: state.mode, consonantOnly: state.consonantOnly, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort, artistSort: state.artistSort });
-  grid.render(r.songs);
-  pill.textContent = countPill(r.songs.length, r.initialQuery);
-  statusTextEl.textContent = statusOverride || statusText({ consonantOnly: state.consonantOnly, mode: state.mode, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort, initialQuery: r.initialQuery, artistSort: state.artistSort });
+  const q = state.query.trim();
+  if (lastQuery === '' && q !== '') browse = { key: viewKey(), ...grid.snapshot() };
+  const restore = q === '' && browse && browse.key === viewKey() ? browse : undefined;
+  if (q === '') browse = null;
+  lastQuery = q;
+  const r = search(state.catalog, state.query, { mode: state.mode, target: state.target, consonantOnly: state.consonantOnly, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort, artistSort: state.artistSort });
+  grid.render(r.songs, restore);
+  pill.textContent = countPill(r.songs.length, r.initialQuery, r.target);
+  statusTextEl.textContent = statusOverride || statusText({ consonantOnly: state.consonantOnly, mode: state.mode, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort, initialQuery: r.initialQuery, artistSort: state.artistSort, target: state.target });
   statusOverride = '';
 }
 
@@ -72,13 +87,13 @@ async function loadAndRender(): Promise<void> {
 }
 
 function updateLabel() {
-  banner.updateButton.textContent = `목록 ${state.catalog?.version ?? '?'} · 업데이트 확인`;
+  banner.setUpdateLabel(`목록 ${state.catalog?.version ?? '?'} · 업데이트 확인`);
 }
 
 async function runUpdateCheck(manual: boolean, force = false) {
   const last = Number(localStorage.getItem(LAST_CHECK_KEY) || 0);
   if (!manual && !force && Date.now() - last < CHECK_INTERVAL_MS) return;
-  banner.updateButton.disabled = true; banner.updateButton.textContent = '확인 중…';
+  banner.updateButton.disabled = true; banner.setUpdateLabel('확인 중…');
   try {
     const res = await checkUpdate(manual ? 10000 : 5000);
     localStorage.setItem(LAST_CHECK_KEY, String(Date.now()));

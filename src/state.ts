@@ -1,11 +1,12 @@
 import type { Catalog } from './lib/catalog';
-import type { ArtistSort, LetterSort, Mode } from './lib/search';
+import type { ArtistSort, LetterSort, Mode, Target } from './lib/search';
 
 export interface AppState {
   catalog: Catalog | null;
   catalogSource: 'bundled' | 'downloaded' | null;
   query: string;
   mode: Mode;
+  target: Target;
   consonantOnly: boolean;
   threeOnly: boolean;
   letter: string;
@@ -18,6 +19,7 @@ export const state: AppState = {
   catalogSource: null,
   query: '',
   mode: 'starts',
+  target: 'title',
   consonantOnly: false,
   threeOnly: false,
   letter: '',

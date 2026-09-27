@@ -1,5 +1,5 @@
 // 화면 문구. 기존 C# RefreshResults / SortDescription 의 문자열을 그대로 쓴다.
-import type { ArtistSort, LetterSort, Mode } from './search';
+import type { ArtistSort, LetterSort, Mode, Target } from './search';
 
 export const MODE_LABELS: Record<Mode, string> = { contains: '포함하는 제목', starts: '시작하는 제목', ends: '끝나는 제목' };
 
@@ -13,14 +13,13 @@ export function sortDescription(letter: string, letterSort: LetterSort, initialQ
   return initialQuery ? '초성 정확히 일치 우선 · 나머지는 긴 제목부터' : '긴 제목부터';
 }
 
-export function statusText(opts: { consonantOnly: boolean; mode: Mode; threeOnly: boolean; letter: string; letterSort: LetterSort; initialQuery: boolean; artistSort?: ArtistSort }): string {
+export function statusText(opts: { consonantOnly: boolean; mode: Mode; threeOnly: boolean; letter: string; letterSort: LetterSort; initialQuery: boolean; artistSort?: ArtistSort; target?: Target }): string {
   return (opts.consonantOnly ? '자음 포함 제목' : '전체 제목')
-    + (opts.mode === 'ends' ? ' · 끝나는 제목' : '')
+    + (opts.target === 'artist' ? ' · 가수 이름으로 검색' : opts.mode === 'ends' ? ' · 끝나는 제목' : '')
     + (opts.threeOnly ? ' · 3글자만' : '')
-    + '  ·  ' + sortDescription(opts.letter, opts.letterSort, opts.initialQuery, opts.artistSort ?? null)
-    + '  ·  두 번 클릭하면 복사';
+    + '  ·  ' + sortDescription(opts.letter, opts.letterSort, opts.initialQuery, opts.artistSort ?? null);
 }
 
-export function countPill(count: number, initialQuery: boolean): string {
-  return (initialQuery ? '초성 검색 결과 ' : '검색 결과 ') + num(count) + '개';
+export function countPill(count: number, initialQuery: boolean, target: Target = 'title'): string {
+  return (target === 'artist' ? '가수 검색 결과 ' : initialQuery ? '초성 검색 결과 ' : '검색 결과 ') + num(count) + '개';
 }

@@ -25,3 +25,6 @@ dist-ssr
 
 out/
 release/
+
+# python cache (tools/)
+__pycache__/

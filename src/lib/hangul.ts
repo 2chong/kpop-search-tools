@@ -43,6 +43,19 @@ export function expandCompoundJamo(text: string): string {
   return out;
 }
 
+const KEEP_ALL = /[\p{L}\p{Nd}]/gu;
+/** 가수 이름 검색 키: 괄호 안 표기도 살리고 글자·숫자만 남긴 소문자. 'ZEROBASEONE (제로베이스원)' → 'zerobaseone제로베이스원' */
+export function artistKeyOf(artist: string): string {
+  return (artist.normalize('NFKC').match(KEEP_ALL) ?? []).join('').toLowerCase();
+}
+
+/** 정리 없이 문자열 그대로의 초성(음절은 초성으로, 나머지는 그대로). 가수 키에 쓴다. */
+export function initialsOfText(text: string): string {
+  let out = '';
+  for (const c of text) out += String.fromCodePoint(initialOf(c.codePointAt(0)!));
+  return out;
+}
+
 /** 표시용 초성 표(ㄱ~ㅎ, 호환 자모). */
 export const CHOSEONG = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
 

@@ -1,5 +1,5 @@
 // 목록 파일(catalog.json) 파싱. tools/export_catalog.py 가 만든 형식(schema 1).
-import { hasStandaloneConsonant, initialsOf } from './hangul';
+import { artistKeyOf, hasStandaloneConsonant, initialsOf, initialsOfText } from './hangul';
 
 export interface Song {
   idx: number;            // 목록 안 순서 = 기본 정렬(긴 제목 → 제목 가나다) 의 tiebreak
@@ -11,6 +11,8 @@ export interface Song {
   initials: string;       // 초성 검색 키
   lower: string;          // 소문자 제목(검색 키)
   consonant: boolean;     // 홀로 쓰인 자음 포함
+  artistKey: string;      // 가수 검색 키(소문자·글자만)
+  artistInitials: string; // 가수 초성 검색 키
 }
 
 export interface Catalog {
@@ -30,6 +32,7 @@ export function parseCatalog(json: string): Catalog {
   const songs: Song[] = raw.songs.map((r, idx) => ({
     idx, title: r[0], chars: r[1], artist: r[2] ?? '', originalTitle: r[3] ?? null, pending: r[4] === 1,
     initials: initialsOf(r[0]), lower: r[0].toLowerCase(), consonant: hasStandaloneConsonant(r[0]),
+    artistKey: artistKeyOf(r[2] ?? ''), artistInitials: initialsOfText(artistKeyOf(r[2] ?? '')),
   }));
   const mainCount = songs.reduce((n, s) => n + (s.pending ? 0 : 1), 0);
   if (mainCount !== raw.count) throw new Error(`목록 곡 수 불일치: ${mainCount} != ${raw.count}`);

@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "version": "2026-09-27.2",
- "url": "https://github.com/2chong/kpop-search-tools/releases/download/catalog-2026-09-27.2/catalog.json.gz",
- "sha256": "6b3fe3997bc1d7858dc602ff3c578b6fbe4bef81d47b8679c6fccf6464381022",
- "size": 292143,
- "count": 13537,
+ "version": "2026-09-27.3",
+ "url": "https://github.com/2chong/kpop-search-tools/releases/download/catalog-2026-09-27.3/catalog.json.gz",
+ "sha256": "d2dc23a7d5734e63ffaa319455baeb00539a4b98d8c5ca0b0ce5fc599446f81c",
+ "size": 292093,
+ "count": 13536,
  "min_app_version": "0.1.0",
- "generated": "2026-09-27T21:44:50+09:00"
+ "generated": "2026-09-27T21:48:25+09:00"
 }

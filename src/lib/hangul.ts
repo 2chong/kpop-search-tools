@@ -35,6 +35,14 @@ export function initialsOf(title: string): string {
   return out;
 }
 
+/** 겹받침 호환 자모(ㄳ ㄵ ㄶ ㄺ ㄻ ㄼ ㄽ ㄾ ㄿ ㅀ ㅄ)를 두 자음으로 풀어 쓴다: 초성 검색어를 빨리 치면 IME 가 ㄴ+ㅎ 을 ㄶ 으로 합치는 문제. */
+const COMPOUND: Record<string, string> = { 'ㄳ': 'ㄱㅅ', 'ㄵ': 'ㄴㅈ', 'ㄶ': 'ㄴㅎ', 'ㄺ': 'ㄹㄱ', 'ㄻ': 'ㄹㅁ', 'ㄼ': 'ㄹㅂ', 'ㄽ': 'ㄹㅅ', 'ㄾ': 'ㄹㅌ', 'ㄿ': 'ㄹㅍ', 'ㅀ': 'ㄹㅎ', 'ㅄ': 'ㅂㅅ' };
+export function expandCompoundJamo(text: string): string {
+  let out = '';
+  for (const c of text) out += COMPOUND[c] ?? c;
+  return out;
+}
+
 /** 표시용 초성 표(ㄱ~ㅎ, 호환 자모). */
 export const CHOSEONG = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
 

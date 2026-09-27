@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseCatalog } from './catalog';
-import { hasStandaloneConsonant, initialsOf, isInitialQuery } from './hangul';
+import { expandCompoundJamo, hasStandaloneConsonant, initialsOf, isInitialQuery } from './hangul';
 import { letterCount, search, type Mode } from './search';
 import { clean } from './titleRules';
 
@@ -30,6 +30,11 @@ describe('hangul', () => {
     for (const q of ['ㅇㅂㅋ', 'ㅇ ㅂ ㅋ', 'ᄋᄇᄏ', 'ㄱ', 'ㅅ']) expect(isInitialQuery(q), q).toBe(true);
     for (const q of ['', '이ㅂㅋ', 'ㅏ', '가', 'abc', 'ㅠㅡㅠ']) expect(isInitialQuery(q), q).toBe(false);
   });
+  it('expandCompoundJamo: ㄶ → ㄴㅎ', () => {
+    expect(expandCompoundJamo('ㄶ')).toBe('ㄴㅎ');
+    expect(expandCompoundJamo('ㅇㅂㅋ')).toBe('ㅇㅂㅋ');
+    expect(expandCompoundJamo('ㄳ각ㅄ')).toBe('ㄱㅅ각ㅂㅅ');
+  });
   it('hasStandaloneConsonant', () => {
     for (const t of ['트월ㅋ', 'ㄳ', 'ㅊ취했', 'ㅎㅇ']) expect(hasStandaloneConsonant(t), t).toBe(true);
     for (const t of ['어디야ㅠㅡㅠ', 'ㅏㅑ', '각', '이불킥']) expect(hasStandaloneConsonant(t), t).toBe(false);
@@ -52,6 +57,10 @@ describe('search', () => {
       expect(r.initialQuery).toBe(true);
       expect(r.songs[0]?.title, `${mode} ${q}`).toBe('이불킥');
     }
+  });
+  it('겹받침 검색어는 두 자음으로: ㄶ → ㄴㅎ 초성', () => {
+    expect(search(catalog, 'ㄶ', { mode: 'contains' }).query).toBe(clean('ㄴㅎ'));
+    expect(titles('contains', 'ㄶ')).toEqual(titles('contains', 'ㄴㅎ'));
   });
   it('ㅂㅋ: 포함 O, 시작 X, 끝 O', () => {
     expect(titles('contains', 'ㅂㅋ')).toContain('이불킥');

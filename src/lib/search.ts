@@ -1,6 +1,6 @@
 // 검색·정렬. 기존 C# Database.Search / SearchInitials / PrioritizeExactInitials / ApplyLetterSort (SongSearch.cs 55-110, 341-365행) 이식.
 import type { Catalog, Song } from './catalog';
-import { isInitialQuery } from './hangul';
+import { expandCompoundJamo, isInitialQuery } from './hangul';
 import { clean } from './titleRules';
 
 export type Mode = 'contains' | 'starts' | 'ends';
@@ -33,7 +33,7 @@ function matches(key: string, q: string, mode: Mode): boolean {
 }
 
 export function search(catalog: Catalog, rawQuery: string, opts: SearchOptions): SearchResult {
-  const q = clean(rawQuery.trim()).toLowerCase();
+  const q = clean(expandCompoundJamo(rawQuery.trim())).toLowerCase();
   const initial = isInitialQuery(q);
   const base = opts.consonantOnly ? catalog.songs.filter((s) => s.consonant) : catalog.songs.filter((s) => !s.pending);
   let songs = base.filter((s) => matches(initial ? s.initials : s.lower, q, opts.mode));

@@ -1,6 +1,6 @@
 [package]
 name = "kpop-search-tools"
-version = "0.1.1"
+version = "0.1.2"
 description = "한국 대중 음악 제목 검색 도구"
 authors = ["chong"]
 edition = "2021"

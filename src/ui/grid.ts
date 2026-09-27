@@ -28,16 +28,15 @@ function titleHtml(title: string, letter: string): string {
 
 export function renderGrid(root: HTMLElement, cb: GridCallbacks): Grid {
   root.className = 'grid-wrap';
-  root.innerHTML = `<table class="grid"><colgroup><col><col style="width:80px"><col style="width:90px"><col style="width:190px"></colgroup>
-    <thead><tr><th>노래 제목</th><th class="sortable" data-sort="lengthFirst" title="글자 선택 시: 긴 제목 → 많은 개수">글자 수<span class="glyph"></span></th>
-    <th class="sortable count" data-sort="countFirst" title="글자가 많은 순, 같은 개수는 긴 제목부터">포함 개수<span class="glyph"></span></th><th>가수</th></tr></thead>
+  root.innerHTML = `<table class="grid hide-count">
+    <thead><tr><th class="th-title">노래 제목</th><th class="sortable th-len" data-sort="lengthFirst" title="글자 선택 시: 긴 제목 → 많은 개수">글자 수<span class="glyph"></span></th>
+    <th class="sortable count th-count" data-sort="countFirst" title="글자가 많은 순, 같은 개수는 긴 제목부터">포함 개수<span class="glyph"></span></th><th class="th-artist">가수</th></tr></thead>
     <tbody></tbody></table><div class="more" hidden><button type="button">더 보기</button></div><div class="empty" hidden>검색 결과가 없습니다.</div>`;
   const table = root.querySelector<HTMLTableElement>('table.grid')!;
   const tbody = table.tBodies[0];
   const more = root.querySelector<HTMLElement>('.more')!;
   const moreBtn = more.querySelector('button')!;
   const empty = root.querySelector<HTMLElement>('.empty')!;
-  const countCol = table.querySelector<HTMLTableColElement>('colgroup col:nth-child(3)')!;
   const countTh = table.querySelector<HTMLElement>('th.count')!;
 
   let songs: Song[] = [];
@@ -89,9 +88,7 @@ export function renderGrid(root: HTMLElement, cb: GridCallbacks): Grid {
 
   function updateHeader() {
     const has = state.letter.length > 0;
-    countCol.style.width = has ? '90px' : '0';
-    countTh.style.display = has ? '' : 'none';
-    tbody.querySelectorAll('td:nth-child(3)').forEach((td) => ((td as HTMLElement).style.display = has ? '' : 'none'));
+    table.classList.toggle('hide-count', !has);   // 열 숨김은 th·td 를 함께 CSS 로 (fixed 레이아웃 정렬 유지)
     countTh.firstChild!.textContent = has ? `${state.letter} 개수` : '포함 개수';
     table.querySelectorAll<HTMLElement>('th.sortable .glyph').forEach((g) => (g.textContent = ''));
     if (has) table.querySelector<HTMLElement>(`th[data-sort="${state.letterSort}"] .glyph`)!.textContent = '▼';
@@ -108,8 +105,6 @@ export function renderGrid(root: HTMLElement, cb: GridCallbacks): Grid {
       empty.hidden = list.length > 0;
       updateHeader();
       appendChunk();
-      const has = state.letter.length > 0;
-      tbody.querySelectorAll('td:nth-child(3)').forEach((td) => ((td as HTMLElement).style.display = has ? '' : 'none'));
       const first = tbody.querySelector('tr'); if (first) { first.classList.add('selected'); selected = first; }
     },
   };

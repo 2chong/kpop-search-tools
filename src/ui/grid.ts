@@ -8,6 +8,7 @@ const CHUNK = 200;
 export interface GridCallbacks {
   onCopy(song: Song): void;
   onSortChange(sort: LetterSort): void;
+  onArtistSort(): void;
 }
 
 export interface Grid {
@@ -30,7 +31,7 @@ export function renderGrid(root: HTMLElement, cb: GridCallbacks): Grid {
   root.className = 'grid-wrap';
   root.innerHTML = `<table class="grid hide-count">
     <thead><tr><th class="th-title">노래 제목</th><th class="sortable th-len" data-sort="lengthFirst" title="글자 선택 시: 긴 제목 → 많은 개수">글자 수<span class="glyph"></span></th>
-    <th class="sortable count th-count" data-sort="countFirst" title="글자가 많은 순, 같은 개수는 긴 제목부터">포함 개수<span class="glyph"></span></th><th class="th-artist">가수</th></tr></thead>
+    <th class="sortable count th-count" data-sort="countFirst" title="글자가 많은 순, 같은 개수는 긴 제목부터">포함 개수<span class="glyph"></span></th><th class="sortable th-artist" data-sort="artist" title="클릭: 가수 가나다순 / 다시 클릭: 역순">가수<span class="glyph"></span></th></tr></thead>
     <tbody></tbody></table><div class="more" hidden><button type="button">더 보기</button></div><div class="empty" hidden>검색 결과가 없습니다.</div>`;
   const table = root.querySelector<HTMLTableElement>('table.grid')!;
   const tbody = table.tBodies[0];
@@ -82,6 +83,8 @@ export function renderGrid(root: HTMLElement, cb: GridCallbacks): Grid {
     if (s) cb.onCopy(s);
   });
   table.querySelectorAll<HTMLElement>('th.sortable').forEach((th) => th.addEventListener('click', () => {
+    if (th.dataset.sort === 'artist') { cb.onArtistSort(); return; }
+    if (state.artistSort) { cb.onSortChange((th.dataset.sort as LetterSort) || 'countFirst'); return; }   // 가수 정렬 중이면 글자 수 클릭 = 기본 정렬로
     if (!state.letter) return;
     cb.onSortChange(th.dataset.sort as LetterSort);
   }));
@@ -91,7 +94,8 @@ export function renderGrid(root: HTMLElement, cb: GridCallbacks): Grid {
     table.classList.toggle('hide-count', !has);   // 열 숨김은 th·td 를 함께 CSS 로 (fixed 레이아웃 정렬 유지)
     countTh.firstChild!.textContent = has ? `${state.letter} 개수` : '포함 개수';
     table.querySelectorAll<HTMLElement>('th.sortable .glyph').forEach((g) => (g.textContent = ''));
-    if (has) table.querySelector<HTMLElement>(`th[data-sort="${state.letterSort}"] .glyph`)!.textContent = '▼';
+    if (state.artistSort) table.querySelector<HTMLElement>('th[data-sort="artist"] .glyph')!.textContent = state.artistSort === 'asc' ? '▲' : '▼';
+    else if (has) table.querySelector<HTMLElement>(`th[data-sort="${state.letterSort}"] .glyph`)!.textContent = '▼';
   }
 
   return {

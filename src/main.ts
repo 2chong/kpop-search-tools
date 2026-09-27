@@ -35,15 +35,16 @@ function showToast(text: string) {
 
 function refresh() {
   if (!state.catalog) return;
-  const r = search(state.catalog, state.query, { mode: state.mode, consonantOnly: state.consonantOnly, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort });
+  const r = search(state.catalog, state.query, { mode: state.mode, consonantOnly: state.consonantOnly, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort, artistSort: state.artistSort });
   grid.render(r.songs);
   pill.textContent = countPill(r.songs.length, r.initialQuery);
-  statusTextEl.textContent = statusOverride || statusText({ consonantOnly: state.consonantOnly, mode: state.mode, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort, initialQuery: r.initialQuery });
+  statusTextEl.textContent = statusOverride || statusText({ consonantOnly: state.consonantOnly, mode: state.mode, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort, initialQuery: r.initialQuery, artistSort: state.artistSort });
   statusOverride = '';
 }
 
 let debounce = 0;
 const controls = renderControls(cardEl, (immediate) => {
+  state.artistSort = null;
   window.clearTimeout(debounce);
   if (immediate) refresh(); else debounce = window.setTimeout(refresh, 80);
 });
@@ -53,7 +54,8 @@ const grid = renderGrid(gridEl, {
     try { await copyText(song.title); showToast(`복사됨: ${song.title}`); statusOverride = '제목을 복사했습니다.'; refresh(); }
     catch { showToast('클립보드를 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.'); }
   },
-  onSortChange(sort) { controls.setLetterSort(sort); refresh(); },
+  onSortChange(sort) { state.artistSort = null; controls.setLetterSort(sort); refresh(); },
+  onArtistSort() { state.artistSort = state.artistSort === 'asc' ? 'desc' : state.artistSort === 'desc' ? null : 'asc'; refresh(); },
 });
 
 document.addEventListener('keydown', (e) => {

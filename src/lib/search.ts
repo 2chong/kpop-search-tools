@@ -5,6 +5,7 @@ import { clean } from './titleRules';
 
 export type Mode = 'contains' | 'starts' | 'ends';
 export type LetterSort = 'countFirst' | 'lengthFirst';
+export type ArtistSort = 'asc' | 'desc' | null;
 
 export interface SearchOptions {
   mode: Mode;
@@ -12,6 +13,7 @@ export interface SearchOptions {
   threeOnly?: boolean;       // 3글자만
   letter?: string;           // 선택 글자('' 이면 없음)
   letterSort?: LetterSort;   // 글자 선택 시 정렬
+  artistSort?: ArtistSort;   // 가수 이름순 정렬 (다른 정렬보다 우선, 가수 없는 곡은 맨 뒤)
 }
 
 export interface SearchResult {
@@ -55,6 +57,15 @@ export function search(catalog: Catalog, rawQuery: string, opts: SearchOptions):
       const primary = lengthFirst ? lengthOrder : countOrder;
       const secondary = lengthFirst ? countOrder : lengthOrder;
       return primary !== 0 ? primary : secondary !== 0 ? secondary : a.title < b.title ? -1 : a.title > b.title ? 1 : 0;
+    });
+  }
+  if (opts.artistSort) {
+    const dir = opts.artistSort === 'asc' ? 1 : -1;
+    songs = songs.slice().sort((a, b) => {
+      if (!a.artist && !b.artist) return 0;
+      if (!a.artist) return 1;
+      if (!b.artist) return -1;
+      return dir * a.artist.localeCompare(b.artist, 'ko');
     });
   }
   return { songs, initialQuery: initial, query: q };

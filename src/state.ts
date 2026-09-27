@@ -1,5 +1,5 @@
 import type { Catalog } from './lib/catalog';
-import type { LetterSort, Mode } from './lib/search';
+import type { ArtistSort, LetterSort, Mode } from './lib/search';
 
 export interface AppState {
   catalog: Catalog | null;
@@ -10,6 +10,7 @@ export interface AppState {
   threeOnly: boolean;
   letter: string;
   letterSort: LetterSort;
+  artistSort: ArtistSort;   // 가수 열 클릭 정렬 (null 이면 기본)
 }
 
 export const state: AppState = {
@@ -21,6 +22,7 @@ export const state: AppState = {
   threeOnly: false,
   letter: '',
   letterSort: 'countFirst',
+  artistSort: null,
 };
 
 export const LETTERS = ['가', '나', '다', '라', '마', '바', '사', '아', '자', '차', '카', '타', '파', '하'];

@@ -109,6 +109,15 @@ describe('search', () => {
   it('3글자만', () => {
     for (const s of search(catalog, '', { mode: 'contains', threeOnly: true }).songs) expect(s.chars).toBe(3);
   });
+  it('가수 정렬: 가나다순/역순, 가수 없는 곡은 맨 뒤', () => {
+    const asc = search(catalog, '사랑', { mode: 'contains', artistSort: 'asc' }).songs;
+    const named = asc.filter((s) => s.artist);
+    for (let i = 1; i < named.length; i++) expect(named[i - 1].artist.localeCompare(named[i].artist, 'ko')).toBeLessThanOrEqual(0);
+    const firstEmpty = asc.findIndex((s) => !s.artist);
+    if (firstEmpty >= 0) for (const s of asc.slice(firstEmpty)) expect(s.artist).toBe('');
+    const desc = search(catalog, '사랑', { mode: 'contains', artistSort: 'desc' }).songs.filter((s) => s.artist);
+    expect(desc[0].artist).toBe(named[named.length - 1].artist);
+  });
   it('글자 선택 정렬', () => {
     const many = search(catalog, '사랑', { mode: 'contains', letter: '가', letterSort: 'countFirst' }).songs;
     for (let i = 1; i < many.length; i++) {

@@ -1,4 +1,4 @@
-# 설치 파일 빌드: npm run tauri build → release\KpopSearchTools-Setup.exe 로 복사하고 크기·SHA-256 출력
+﻿# 설치 파일 빌드: npm run tauri build → release\KpopSearchTools-Setup.exe 로 복사하고 크기·SHA-256 출력
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root

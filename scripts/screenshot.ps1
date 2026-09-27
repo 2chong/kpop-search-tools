@@ -1,4 +1,4 @@
-# 앱을 실행해 창을 캡처한다 (수동 검증용). 사용: .\scripts\screenshot.ps1 [-Exe path] [-Out path] [-Wait 5] [-Keys "사랑"]
+﻿# 앱을 실행해 창을 캡처한다 (수동 검증용). 사용: .\scripts\screenshot.ps1 [-Exe path] [-Out path] [-Wait 5] [-Keys "사랑"]
 param(
   [string]$Exe = (Join-Path (Split-Path -Parent $PSScriptRoot) 'src-tauri\target\release\KpopSearchTools.exe'),
   [string]$Out = (Join-Path (Split-Path -Parent $PSScriptRoot) 'out\screenshot.png'),

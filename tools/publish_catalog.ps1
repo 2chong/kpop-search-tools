@@ -1,4 +1,4 @@
-# 목록(catalog) 발행: export → GitHub Release(catalog-<ver>) 업로드 → catalog/manifest.json 커밋·푸시
+﻿# 목록(catalog) 발행: export → GitHub Release(catalog-<ver>) 업로드 → catalog/manifest.json 커밋·푸시
 # 사용: .\tools\publish_catalog.ps1 [-Version 2026-09-25.2] [-Repo user/kpop-search-tools] [-Db path\to\songs.db]
 # 사전: winget install GitHub.cli ; gh auth login ; 저장소가 origin 으로 연결되어 있을 것
 param(
@@ -6,7 +6,8 @@ param(
   [string]$Repo,
   [string]$Db
 )
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'   # git/gh 는 진행 메시지를 stderr 로 쓰므로 종료 코드로만 판단
+function Check($what) { if ($LASTEXITCODE -ne 0) { throw "$what failed ($LASTEXITCODE)" } }
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
@@ -30,21 +31,30 @@ if ($prev.count -and [math]::Abs($count - $prev.count) -gt [math]::Max(500, $pre
 }
 
 $tag = "catalog-$ver"
-git tag $tag
-git push origin $tag
-gh release create $tag 'out/catalog/catalog.json.gz' 'out/catalog/manifest.json' --repo $Repo --title "Catalog $ver" --notes "노래 제목 목록 $count 곡" --latest=false
-if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
+if (-not (git tag -l $tag)) { git tag $tag; Check 'git tag' }
+git push origin $tag; Check 'git push tag'
+gh release view $tag --repo $Repo *> $null
+if ($LASTEXITCODE -eq 0) {
+  gh release upload $tag 'out/catalog/catalog.json.gz' 'out/catalog/manifest.json' --repo $Repo --clobber; Check 'gh release upload'
+} else {
+  gh release create $tag 'out/catalog/catalog.json.gz' 'out/catalog/manifest.json' --repo $Repo --title "Catalog $ver" --notes "노래 제목 목록 $count 곡" --latest=false; Check 'gh release create'
+}
 
 # 올라간 파일 검증
 $manifest = Get-Content 'out/catalog/manifest.json' -Raw | ConvertFrom-Json
 $tmp = Join-Path $env:TEMP 'catalog-check.gz'
-Invoke-WebRequest -Uri $manifest.url -OutFile $tmp -UseBasicParsing
-$hash = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLower()
-if ($hash -ne $manifest.sha256) { throw "업로드된 파일 sha256 불일치: $hash" }
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$hash = ''
+foreach ($try in 1..6) {   # 릴리스 자산은 올린 직후 몇 초 뒤에 열린다
+  try { Invoke-WebRequest -Uri $manifest.url -OutFile $tmp -UseBasicParsing -ErrorAction Stop; $hash = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLower() } catch { $hash = '' }
+  if ($hash -eq $manifest.sha256) { break }
+  Start-Sleep -Seconds 10
+}
+if ($hash -ne $manifest.sha256) { throw "업로드된 파일 sha256 불일치: '$hash' (기대 $($manifest.sha256))" }
 Write-Output "release asset verified: $($manifest.url)"
 
 Copy-Item 'out/catalog/manifest.json' 'catalog/manifest.json' -Force
-git add catalog/manifest.json src-tauri/resources/catalog.json.gz
-git commit -m "catalog $ver ($count 곡)"
-git push
+git add catalog/manifest.json src-tauri/resources/catalog.json.gz tools scripts
+git commit -m "catalog $ver ($count 곡)"; Check 'git commit'
+git push; Check 'git push'
 Write-Output "done: 앱은 다음 실행(또는 '목록 업데이트 확인') 때 $ver 로 갱신됩니다."

@@ -43,6 +43,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; overflow: hidden; }
 body { background: var(--bg); position: relative; }
 /* 화면 전체 뒤에 깔리는 흐릿한 파스텔 빛. 카드가 유리처럼 떠 보이게 하는 배경. */

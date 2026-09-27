@@ -1,7 +1,7 @@
 // 화면 문구. 기존 C# RefreshResults / SortDescription 의 문자열을 그대로 쓴다.
 import type { ArtistSort, LetterSort, Mode, Target } from './search';
 
-export const MODE_LABELS: Record<Mode, string> = { contains: '포함하는 제목', starts: '시작하는 제목', ends: '끝나는 제목' };
+export const MODE_LABELS: Record<Mode, string> = { starts: '시작하는 제목', contains: '포함하는 제목', ends: '끝나는 제목' };   // 화면 순서
 
 export function num(n: number): string {
   return n.toLocaleString('ko-KR');
@@ -20,6 +20,6 @@ export function statusText(opts: { consonantOnly: boolean; mode: Mode; threeOnly
     + '  ·  ' + sortDescription(opts.letter, opts.letterSort, opts.initialQuery, opts.artistSort ?? null);
 }
 
-export function countPill(count: number, initialQuery: boolean, target: Target = 'title'): string {
-  return (target === 'artist' ? '가수 검색 결과 ' : initialQuery ? '초성 검색 결과 ' : '검색 결과 ') + num(count) + '개';
+export function countPill(count: number, initialQuery: boolean): string {
+  return (initialQuery ? '초성 검색 결과 ' : '검색 결과 ') + num(count) + '개';
 }

@@ -1859,7 +1859,7 @@ dependencies = [
 
 [[package]]
 name = "kpop-search-tools"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "flate2",
  "hex",

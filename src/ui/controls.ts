@@ -12,10 +12,12 @@ export interface Controls {
   setLetterSort(sort: LetterSort): void;
 }
 
-const MODE_SHORT: Record<Mode, string> = { contains: '포함', starts: '시작', ends: '끝' };
+const MODE_SHORT: Record<Mode, string> = { starts: '시작', contains: '포함', ends: '끝' };
 const PLACEHOLDER: Record<Target, string> = { title: '노래 제목 또는 초성으로 검색 (예: 사랑, ㅇㅂㅋ)', artist: '가수 이름 또는 초성으로 검색 (예: 아이유, ㅌㅇ)' };
 
-export function renderControls(root: HTMLElement, onChange: (immediate: boolean) => void): Controls {
+export type ChangeReason = 'query' | 'target' | 'filter';
+
+export function renderControls(root: HTMLElement, onChange: (immediate: boolean, reason?: ChangeReason) => void): Controls {
   root.className = 'card';
   const modes = (Object.keys(MODE_LABELS) as Mode[])
     .map((m) => `<label title="${MODE_LABELS[m]}"><input type="radio" name="mode" value="${m}"${m === state.mode ? ' checked' : ''}><span>${MODE_SHORT[m]}</span></label>`).join('');
@@ -72,7 +74,7 @@ export function renderControls(root: HTMLElement, onChange: (immediate: boolean)
     if (r.checked) { state.mode = r.value as Mode; onChange(true); }
   }));
   root.querySelectorAll<HTMLInputElement>('input[name="target"]').forEach((r) => r.addEventListener('change', () => {
-    if (r.checked) { state.target = r.value as Target; applyTarget(); onChange(true); }
+    if (r.checked) { state.target = r.value as Target; applyTarget(); onChange(true, 'target'); }
   }));
   root.querySelectorAll<HTMLInputElement>('input[name="collection"]').forEach((r) => r.addEventListener('change', () => {
     if (r.checked) { state.consonantOnly = r.value === 'consonant'; onChange(true); }

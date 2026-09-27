@@ -39,27 +39,36 @@ function showToast(text: string) {
 }
 
 // 검색을 시작하기 직전에 보던 자리를 기억해 두고, 검색어를 모두 지우면(같은 보기 조건이면) 그 자리로 돌아간다.
+// 검색어가 없을 때 목록을 결정하는 조건만 키에 넣는다 (검색 방식·제목/가수 전환은 빈 검색어에선 결과가 같다).
 let browse: (ViewSnapshot & { key: string }) | null = null;
 let lastQuery = '';
-const viewKey = () => [state.mode, state.target, state.consonantOnly, state.threeOnly, state.letter, state.letterSort].join('|');
+let keepPlace = false;   // 제목↔가수 전환: 지금 보던 자리를 그대로 유지
+const viewKey = () => [state.consonantOnly, state.threeOnly, state.letter, state.letterSort].join('|');
 
 function refresh() {
   if (!state.catalog) return;
   const q = state.query.trim();
   if (lastQuery === '' && q !== '') browse = { key: viewKey(), ...grid.snapshot() };
-  const restore = q === '' && browse && browse.key === viewKey() ? browse : undefined;
+  let restore: ViewSnapshot | undefined = q === '' && browse && browse.key === viewKey() ? browse : undefined;
+  if (keepPlace) {
+    // 검색 중이면 같은 곡이 새 결과에 있을 때만 그 곡으로, 아니면 맨 위. 검색어가 없으면 스크롤도 그대로.
+    const snap = grid.snapshot();
+    restore = q === '' ? snap : { ...snap, scrollTop: 0 };
+    keepPlace = false;
+  }
   if (q === '') browse = null;
   lastQuery = q;
   const r = search(state.catalog, state.query, { mode: state.mode, target: state.target, consonantOnly: state.consonantOnly, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort, artistSort: state.artistSort });
   grid.render(r.songs, restore);
-  pill.textContent = countPill(r.songs.length, r.initialQuery, r.target);
+  pill.textContent = countPill(r.songs.length, r.initialQuery);
   statusTextEl.textContent = statusOverride || statusText({ consonantOnly: state.consonantOnly, mode: state.mode, threeOnly: state.threeOnly, letter: state.letter, letterSort: state.letterSort, initialQuery: r.initialQuery, artistSort: state.artistSort, target: state.target });
   statusOverride = '';
 }
 
 let debounce = 0;
-const controls = renderControls(cardEl, (immediate) => {
-  state.artistSort = null;
+const controls = renderControls(cardEl, (immediate, reason) => {
+  if (reason === 'target') keepPlace = true;   // 제목↔가수 전환은 정렬·자리를 그대로 둔다
+  else state.artistSort = null;
   window.clearTimeout(debounce);
   if (immediate) refresh(); else debounce = window.setTimeout(refresh, 80);
 });
